@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app_backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DB_HOST=mysql_db
+      - DB_PORT=3306
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+    depends_on:
+      - mysql_db
+    networks:
+      - nest-network
+
+  mysql_db:
+    image: mysql:8
+    container_name: mysql_db
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - nest-network
+
+volumes:
+  db_data:
+
+
+networks:
+  nest-network:
