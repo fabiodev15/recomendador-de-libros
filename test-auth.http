@@ -1,0 +1,26 @@
+### Registro de usuario
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Login de usuario
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Prueba con otro usuario
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "email": "juan@example.com",
+  "password": "mipassword456"
+}
