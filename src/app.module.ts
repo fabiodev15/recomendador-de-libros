@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
 import { LibraryModule } from './library/library.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { LibraryModule } from './library/library.module';
     UsersModule,
     BooksModule,
     LibraryModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

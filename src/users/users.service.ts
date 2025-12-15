@@ -23,7 +23,35 @@ export class UsersService {
         return this.usersRepository.save(newUser);
     }
 
-    async findByEmail(email: string): Promise<User | null> {
+    async findByEmail(email: string): Promise<User | undefined> {
         return this.usersRepository.findOne({ where: { email } });
+    }
+
+    async updatePreferences(userId: number, preferences: { favorite_genres?: string[], favorite_authors?: string[] }) {
+        const user = await this.usersRepository.findOne({
+            where: { id: userId },
+            relations: ['preferences'],
+        });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        if (!user.preferences) {
+            user.preferences = this.usersRepository.manager.create('UserPreferences', {
+                favorite_genres: preferences.favorite_genres || [],
+                favorite_authors: preferences.favorite_authors || [],
+            });
+        } else {
+            if (preferences.favorite_genres) {
+                user.preferences.favorite_genres = preferences.favorite_genres;
+            }
+            if (preferences.favorite_authors) {
+                user.preferences.favorite_authors = preferences.favorite_authors;
+            }
+        }
+
+        await this.usersRepository.manager.save(user.preferences);
+        return user;
     }
 }

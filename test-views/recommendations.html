@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Recommender - Recomendaciones</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <h2>📚 Book Recommender</h2>
+        <button onclick="logout()" class="btn-secondary">Cerrar Sesión</button>
+    </nav>
+
+    <div class="container">
+        <h1>Tus Recomendaciones</h1>
+        <p class="subtitle">Libros seleccionados especialmente para ti</p>
+
+        <div id="loading" class="loading">Cargando recomendaciones...</div>
+        <div id="recommendations" class="books-grid"></div>
+    </div>
+
+    <!-- Modal for book details -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        checkAuth();
+
+        const modal = document.getElementById('bookModal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+
+        closeBtn.onclick = () => modal.style.display = 'none';
+        window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
+
+        async function loadRecommendations() {
+            try {
+                const response = await fetch('http://localhost:3000/recommendations?limit=12', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load');
+
+                const data = await response.json();
+                displayRecommendations(data.recommendations);
+            } catch (error) {
+                document.getElementById('loading').textContent = 'Error al cargar recomendaciones';
+            }
+        }
+
+        function displayRecommendations(books) {
+            document.getElementById('loading').style.display = 'none';
+            const container = document.getElementById('recommendations');
+
+            books.forEach(book => {
+                const card = document.createElement('div');
+                card.className = 'book-card';
+
+                const cover = book.volumeInfo.imageLinks?.thumbnail || book.volumeInfo.imageLinks?.smallThumbnail || 'https://via.placeholder.com/128x192?text=No+Cover';
+                const title = book.volumeInfo.title || 'Sin título';
+                const authors = book.volumeInfo.authors?.join(', ') || 'Autor desconocido';
+                const description = book.volumeInfo.description || 'Sin descripción';
+
+                card.innerHTML = `
+                    <img src="${cover}" alt="${title}" onclick="showDetails('${book.id}')">
+                    <div class="book-info">
+                        <h3>${title.length > 50 ? title.substring(0, 50) + '...' : title}</h3>
+                        <p class="author">${authors}</p>
+                        <p class="reason">${book.recommendationReason || ''}</p>
+                        <div class="book-actions">
+                            <button onclick="addToLibrary('${book.id}', 'INTERESTED')" class="btn-small btn-interested">Me interesa</button>
+                            <button onclick="addToLibrary('${book.id}', 'READ')" class="btn-small btn-read">Leído</button>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        async function addToLibrary(googleBookId, status) {
+            try {
+                const response = await fetch('http://localhost:3000/library', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ googleBookId, status })
+                });
+
+                if (response.ok) {
+                    alert(`✓ Libro agregado como "${status}"`);
+                }
+            } catch (error) {
+                alert('Error al agregar libro');
+            }
+        }
+
+        async function showDetails(bookId) {
+            try {
+                const response = await fetch(`http://localhost:3000/books/${bookId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!response.ok) throw new Error('Failed');
+
+                const book = await response.json();
+                const modalBody = document.getElementById('modalBody');
+
+                const cover = book.cover_url || 'https://via.placeholder.com/200x300?text=No+Cover';
+
+                modalBody.innerHTML = `
+                    <div class="modal-book">
+                        <img src="${cover}" alt="${book.title}">
+                        <div>
+                            <h2>${book.title}</h2>
+                            <p class="author">${book.author}</p>
+                            <p>ID de Google Books: ${book.google_id}</p>
+                        </div>
+                    </div>
+                `;
+
+                modal.style.display = 'block';
+            } catch (error) {
+                alert('Error al cargar detalles');
+            }
+        }
+
+        loadRecommendations();
+    </script>
+</body>
+
+</html>
