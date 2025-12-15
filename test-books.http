@@ -1,0 +1,18 @@
+### Buscar libros (requiere autenticación)
+GET http://localhost:3000/books/search?q=javascript&maxResults=5
+Authorization: Bearer {{token}}
+
+### Obtener libro por ID de Google Books
+GET http://localhost:3000/books/gKmrDwAAQBAJ
+Authorization: Bearer {{token}}
+
+### Buscar libros de Node.js
+GET http://localhost:3000/books/search?q=nodejs&maxResults=10
+Authorization: Bearer {{token}}
+
+### Buscar por autor
+GET http://localhost:3000/books/search?q=author:robert+martin
+Authorization: Bearer {{token}}
+
+### Variables (reemplaza con tu token JWT del login)
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
