@@ -1,0 +1,37 @@
+### Agregar libro a biblioteca (requiere autenticación)
+POST http://localhost:3000/library
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "googleBookId": "gKmrDwAAQBAJ",
+  "status": "INTERESTED"
+}
+
+### Ver mi biblioteca completa
+GET http://localhost:3000/library
+Authorization: Bearer {{token}}
+
+### Ver solo libros marcados como INTERESTED
+GET http://localhost:3000/library?status=INTERESTED
+Authorization: Bearer {{token}}
+
+### Ver solo libros leídos
+GET http://localhost:3000/library?status=READ
+Authorization: Bearer {{token}}
+
+### Actualizar estado de una interacción
+PATCH http://localhost:3000/library/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "READ"
+}
+
+### Eliminar interacción
+DELETE http://localhost:3000/library/1
+Authorization: Bearer {{token}}
+
+### Variables (reemplaza con tu token JWT del login)
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
