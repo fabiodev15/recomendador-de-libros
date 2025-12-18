@@ -5,11 +5,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
-  app.enableCors({
-    origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],
-    credentials: true,
-  });
+  // Habilitar CORS para todos los orígenes durante el desarrollo.
+  // Esto soluciona el error 'origin null' al abrir archivos HTML directamente.
+  app.enableCors();
 
   app.useGlobalPipes(new ValidationPipe({
     transform: true,
