@@ -14,4 +14,7 @@ export class UserPreferences {
 
     @Column('simple-array', { nullable: true })
     favorite_authors: string[];
+
+    @Column('simple-array', { nullable: true })
+    favorite_books: string[];
 }

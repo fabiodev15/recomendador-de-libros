@@ -19,6 +19,6 @@ export class BooksController {
 
     @Get(':googleId')
     async getBookById(@Param('googleId') googleId: string) {
-        return this.booksService.getBookById(googleId);
+        return this.booksService.getBookByGoogleId(googleId);
     }
 }

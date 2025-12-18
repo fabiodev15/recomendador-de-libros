@@ -10,4 +10,9 @@ export class UpdatePreferencesDto {
     @IsArray()
     @IsString({ each: true })
     favorite_authors?: string[];
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    favorite_books?: string[];
 }

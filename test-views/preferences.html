@@ -24,6 +24,12 @@
                 <small>Separa los autores con comas</small>
             </div>
 
+            <div class="form-group">
+                <label for="books">Libros favoritos (opcional)</label>
+                <input type="text" id="books" placeholder="Ej: Cien años de soledad, Harry Potter">
+                <small>Separa los libros con comas</small>
+            </div>
+
             <button id="savePreferences" class="btn-primary">Continuar</button>
         </div>
     </div>
@@ -33,9 +39,9 @@
         checkAuth();
 
         const genres = [
-            'Fiction', 'Mystery', 'Science Fiction', 'Fantasy', 'Romance',
-            'Thriller', 'Biography', 'History', 'Self-Help', 'Business',
-            'Poetry', 'Horror', 'Adventure', 'Philosophy', 'Science'
+            'Ficción', 'Misterio', 'Ciencia Ficción', 'Fantasía', 'Romance',
+            'Thriller', 'Biografía', 'Historia', 'Autoayuda', 'Negocios',
+            'Poesía', 'Terror', 'Aventura', 'Filosofía', 'Ciencia'
         ];
 
         const selectedGenres = new Set();
@@ -66,6 +72,9 @@
             const authorsInput = document.getElementById('authors').value;
             const authors = authorsInput ? authorsInput.split(',').map(a => a.trim()).filter(a => a) : [];
 
+            const booksInput = document.getElementById('books').value;
+            const books = booksInput ? booksInput.split(',').map(b => b.trim()).filter(b => b) : [];
+
             try {
                 const response = await fetch('http://localhost:3000/users/preferences', {
                     method: 'PATCH',
@@ -75,7 +84,8 @@
                     },
                     body: JSON.stringify({
                         favorite_genres: Array.from(selectedGenres),
-                        favorite_authors: authors
+                        favorite_authors: authors,
+                        favorite_books: books
                     })
                 });
 

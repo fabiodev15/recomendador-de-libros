@@ -14,7 +14,7 @@ export class LibraryService {
 
     async addInteraction(userId: number, googleBookId: string, status: InteractionStatus) {
         // First, get or create the book
-        const book = await this.booksService.getBookById(googleBookId);
+        const book = await this.booksService.getBookByGoogleId(googleBookId);
 
         // Check if interaction already exists
         const existingInteraction = await this.interactionRepository.findOne({

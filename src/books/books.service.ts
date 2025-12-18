@@ -2,87 +2,115 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { firstValueFrom } from 'rxjs';
 import { Book } from './entities/book.entity';
-import { GoogleBooksResponseDto, GoogleBookDto } from './dto/google-books.dto';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class BooksService {
-    private readonly GOOGLE_BOOKS_API = 'https://www.googleapis.com/books/v1/volumes';
+    private readonly OPEN_LIBRARY_API = 'https://openlibrary.org';
 
     constructor(
-        private readonly httpService: HttpService,
+        private httpService: HttpService,
         @InjectRepository(Book)
         private booksRepository: Repository<Book>,
     ) { }
 
-    async searchBooks(query: string, maxResults: number = 10, startIndex: number = 0) {
+    async searchBooks(query: string, limit: number = 10, offset: number = 0) {
         try {
-            const url = `${this.GOOGLE_BOOKS_API}?q=${encodeURIComponent(query)}&maxResults=${maxResults}&startIndex=${startIndex}`;
+            // Open Library search endpoint
+            const url = `${this.OPEN_LIBRARY_API}/search.json`;
+            const params = {
+                q: query,
+                limit: limit,
+                offset: offset,
+                fields: 'key,title,author_name,cover_i,first_publish_year,isbn,number_of_pages_median,ratings_average,ratings_count,subject'
+            };
 
             const response = await firstValueFrom(
-                this.httpService.get<GoogleBooksResponseDto>(url)
+                this.httpService.get(url, { params })
             );
 
-            return response.data;
+            // Transform Open Library format to our format (similar to Google Books)
+            const transformedDocs = response.data.docs.map(doc => ({
+                id: doc.key?.replace('/works/', '') || `ol-${Math.random()}`,
+                volumeInfo: {
+                    title: doc.title,
+                    authors: doc.author_name || [],
+                    description: `Published in ${doc.first_publish_year || 'unknown'}`,
+                    imageLinks: {
+                        thumbnail: doc.cover_i
+                            ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+                            : null
+                    },
+                    pageCount: doc.number_of_pages_median || null,
+                    averageRating: doc.ratings_average || null,
+                    ratingsCount: doc.ratings_count || null,
+                    industryIdentifiers: doc.isbn ? [{ type: 'ISBN', identifier: doc.isbn[0] }] : [],
+                    categories: doc.subject?.slice(0, 3) || [],
+                    infoLink: `https://openlibrary.org${doc.key}`
+                }
+            }));
+
+            return {
+                items: transformedDocs,
+                totalItems: response.data.numFound
+            };
         } catch (error) {
-            throw new HttpException(
-                'Error fetching books from Google Books API',
-                HttpStatus.BAD_GATEWAY,
-            );
+            console.error('Error searching Open Library:', error.message);
+            return { items: [], totalItems: 0 };
         }
     }
 
-    async getBookById(googleId: string) {
-        // First check if book exists in local database
-        const cachedBook = await this.booksRepository.findOne({
+    async getBookByGoogleId(googleId: string) {
+        // Check if book exists in database
+        const existingBook = await this.booksRepository.findOne({
             where: { google_id: googleId },
         });
 
-        if (cachedBook) {
-            return cachedBook;
+        if (existingBook) {
+            return existingBook;
         }
 
-        // If not in cache, fetch from Google Books API
+        // Fetch from Open Library
         try {
-            const url = `${this.GOOGLE_BOOKS_API}/${googleId}`;
-            const response = await firstValueFrom(
-                this.httpService.get<GoogleBookDto>(url)
-            );
+            const url = `${this.OPEN_LIBRARY_API}/works/${googleId}.json`;
+            const response = await firstValueFrom(this.httpService.get(url));
+            const data = response.data;
 
-            const bookData = response.data;
+            // Transform and save
+            const bookData: Partial<Book> = {
+                google_id: googleId,
+                title: data.title || 'Unknown',
+                author: data.authors?.[0]?.author?.key || 'Unknown',
+                cover_url: (data.covers?.[0]
+                    ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-L.jpg`
+                    : null) || undefined
+            };
 
-            // Save to database for caching
-            const book = await this.saveBook(bookData);
-            return book;
+            const book = this.booksRepository.create(bookData);
+            return await this.booksRepository.save(book);
         } catch (error) {
-            throw new HttpException(
-                'Book not found',
-                HttpStatus.NOT_FOUND,
-            );
+            throw new HttpException('Book not found', HttpStatus.NOT_FOUND);
         }
     }
 
-    async saveBook(googleBookData: GoogleBookDto): Promise<Book> {
-        const { id, volumeInfo } = googleBookData;
-
-        // Check if book already exists
-        let book = await this.booksRepository.findOne({
-            where: { google_id: id },
+    async saveBook(googleId: string, title: string, author: string, coverUrl: string) {
+        const existingBook = await this.booksRepository.findOne({
+            where: { google_id: googleId },
         });
 
-        if (book) {
-            return book;
+        if (existingBook) {
+            return existingBook;
         }
 
-        // Create new book entry
-        book = this.booksRepository.create({
-            google_id: id,
-            title: volumeInfo.title,
-            author: volumeInfo.authors?.join(', ') || 'Unknown',
-            cover_url: volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail,
-        });
+        const bookData: Partial<Book> = {
+            google_id: googleId,
+            title,
+            author,
+            cover_url: coverUrl,
+        };
 
-        return this.booksRepository.save(book);
+        const book = this.booksRepository.create(bookData);
+        return await this.booksRepository.save(book);
     }
 }

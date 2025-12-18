@@ -24,10 +24,11 @@ export class UsersService {
     }
 
     async findByEmail(email: string): Promise<User | undefined> {
-        return this.usersRepository.findOne({ where: { email } });
+        const user = await this.usersRepository.findOne({ where: { email } });
+        return user || undefined;
     }
 
-    async updatePreferences(userId: number, preferences: { favorite_genres?: string[], favorite_authors?: string[] }) {
+    async updatePreferences(userId: number, preferences: { favorite_genres?: string[], favorite_authors?: string[], favorite_books?: string[] }) {
         const user = await this.usersRepository.findOne({
             where: { id: userId },
             relations: ['preferences'],
@@ -41,6 +42,7 @@ export class UsersService {
             user.preferences = this.usersRepository.manager.create('UserPreferences', {
                 favorite_genres: preferences.favorite_genres || [],
                 favorite_authors: preferences.favorite_authors || [],
+                favorite_books: preferences.favorite_books || [],
             });
         } else {
             if (preferences.favorite_genres) {
@@ -48,6 +50,9 @@ export class UsersService {
             }
             if (preferences.favorite_authors) {
                 user.preferences.favorite_authors = preferences.favorite_authors;
+            }
+            if (preferences.favorite_books) {
+                user.preferences.favorite_books = preferences.favorite_books;
             }
         }
 

@@ -11,7 +11,11 @@
 <body>
     <nav class="navbar">
         <h2>📚 Book Recommender</h2>
-        <button onclick="logout()" class="btn-secondary">Cerrar Sesión</button>
+        <div>
+            <a href="my-interests.html" class="btn-secondary" style="margin-right: 10px;">Mis Intereses</a>
+            <a href="my-books.html" class="btn-secondary" style="margin-right: 10px;">Mis Libros</a>
+            <button onclick="logout()" class="btn-secondary">Cerrar Sesión</button>
+        </div>
     </nav>
 
     <div class="container">
@@ -67,6 +71,7 @@
                 const title = book.volumeInfo.title || 'Sin título';
                 const authors = book.volumeInfo.authors?.join(', ') || 'Autor desconocido';
                 const description = book.volumeInfo.description || 'Sin descripción';
+                const buyLink = book.volumeInfo.infoLink || `https://www.amazon.com/s?k=${encodeURIComponent(title)}`;
 
                 card.innerHTML = `
                     <img src="${cover}" alt="${title}" onclick="showDetails('${book.id}')">
@@ -78,6 +83,7 @@
                             <button onclick="addToLibrary('${book.id}', 'INTERESTED')" class="btn-small btn-interested">Me interesa</button>
                             <button onclick="addToLibrary('${book.id}', 'READ')" class="btn-small btn-read">Leído</button>
                         </div>
+                        <a href="${buyLink}" target="_blank" class="btn-small" style="display:block;text-align:center;margin-top:10px;background:#FF9800;color:white;text-decoration:none;padding:0.5rem 1rem;border-radius:10px;">🛒 Comprar</a>
                     </div>
                 `;
 

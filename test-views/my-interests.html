@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Recommender - Mis Intereses</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <h2>📚 Book Recommender</h2>
+        <div>
+            <a href="recommendations.html" class="btn-secondary" style="margin-right: 10px;">Recomendaciones</a>
+            <a href="my-books.html" class="btn-secondary" style="margin-right: 10px;">Mis Libros</a>
+            <button onclick="logout()" class="btn-secondary">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Mis Intereses</h1>
+        <p class="subtitle">Libros que te interesan</p>
+
+        <div id="loading" class="loading">Cargando...</div>
+        <div id="books" class="books-grid"></div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        checkAuth();
+
+        async function loadInterests() {
+            try {
+                const response = await fetch('http://localhost:3000/library?status=INTERESTED', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!response.ok) throw new Error('Failed');
+
+                const interactions = await response.json();
+                displayBooks(interactions);
+            } catch (error) {
+                document.getElementById('loading').textContent = 'Error al cargar';
+            }
+        }
+
+        function displayBooks(interactions) {
+            document.getElementById('loading').style.display = 'none';
+            const container = document.getElementById('books');
+
+            if (interactions.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:white;">No tienes libros marcados como interesantes aún.</p>';
+                return;
+            }
+
+            interactions.forEach(interaction => {
+                const book = interaction.book;
+                const card = document.createElement('div');
+                card.className = 'book-card';
+
+                card.innerHTML = `
+                    <img src="${book.cover_url || 'https://via.placeholder.com/128x192?text=No+Cover'}" alt="${book.title}">
+                    <div class="book-info">
+                        <h3>${book.title}</h3>
+                        <p class="author">${book.author}</p>
+                        <div class="book-actions">
+                            <button onclick="markAsRead(${interaction.id})" class="btn-small btn-read">Marcar como Leído</button>
+                            <button onclick="removeInteraction(${interaction.id})" class="btn-small" style="background:#f44336;color:white;">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        async function markAsRead(interactionId) {
+            try {
+                await fetch(`http://localhost:3000/library/${interactionId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ status: 'READ' })
+                });
+                location.reload();
+            } catch (error) {
+                alert('Error');
+            }
+        }
+
+        async function removeInteraction(interactionId) {
+            try {
+                await fetch(`http://localhost:3000/library/${interactionId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                location.reload();
+            } catch (error) {
+                alert('Error');
+            }
+        }
+
+        loadInterests();
+    </script>
+</body>
+
+</html>
