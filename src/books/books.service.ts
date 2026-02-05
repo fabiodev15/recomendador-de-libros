@@ -30,7 +30,7 @@ export class BooksService {
                 this.httpService.get(url, { params })
             );
 
-            // Transform Open Library format to our format (similar to Google Books)
+            
             const transformedDocs = response.data.docs.map(doc => ({
                 id: doc.key?.replace('/works/', '') || `ol-${Math.random()}`,
                 volumeInfo: {

@@ -49,34 +49,34 @@ export class RecommendationsService {
         return genreMap[genre.toLowerCase()] || genre.toLowerCase();
     }
 
-    // Check if book is recent (prefer books from last 15 years)
+    
     private isRecentBook(book: any): boolean {
         const volumeInfo = book.volumeInfo || {};
         const publishedDate = volumeInfo.publishedDate;
 
         if (!publishedDate) {
-            return false; // Prefer books with known publication dates
+            return false; 
         }
 
         const year = parseInt(publishedDate.split('-')[0]);
         const currentYear = new Date().getFullYear();
 
-        // Prefer books from 2010 onwards (last ~15 years)
+        
         return year >= 2010 && year <= currentYear;
     }
 
-    // Aggressive quality and popularity filtering
+    
     private isQualityBook(book: any): boolean {
         const volumeInfo = book.volumeInfo || {};
         const title = volumeInfo.title || '';
         const titleLower = title.toLowerCase();
 
-        // Must have title and authors
+        
         if (!volumeInfo.title || !volumeInfo.authors || volumeInfo.authors.length === 0) {
             return false;
         }
 
-        // Filter out obvious non-books by title keywords
+     
         const badKeywords = [
             'journal', 'magazine', 'almanac', 'yearbook', 'digest', 'bulletin',
             'newsletter', 'catalog', 'directory', 'guide to periodical',
@@ -91,7 +91,7 @@ export class RecommendationsService {
             }
         }
 
-        // Must have description
+  
         if (!volumeInfo.description) {
             return false;
         }
@@ -132,7 +132,7 @@ export class RecommendationsService {
             return false;
         }
 
-        // Only filter out obvious non-books
+        
         const badKeywords = ['journal', 'magazine', 'almanac', 'yearbook', 'digest', 'bulletin'];
         for (const keyword of badKeywords) {
             if (titleLower.includes(keyword)) {
@@ -141,13 +141,12 @@ export class RecommendationsService {
             }
         }
 
-        // More lenient: just need description OR page count
+    
         if (!volumeInfo.description && !volumeInfo.pageCount) {
             console.log(`Skipping book "${title}" by author due to missing description and page count.`);
             return false;
         }
 
-        // Lower page requirement for favorite authors
         if (volumeInfo.pageCount && volumeInfo.pageCount < 30) {
             console.log(`Skipping book "${title}" by author due to low page count: ${volumeInfo.pageCount}.`);
             return false;
@@ -174,7 +173,7 @@ export class RecommendationsService {
 
         const addBooks = (books: any[], reason: string) => {
             if (books && books.length > 0) {
-                // Separate recent and older books
+             
                 const recentBooks: any[] = [];
                 const olderBooks: any[] = [];
 
@@ -188,7 +187,7 @@ export class RecommendationsService {
                     }
                 }
 
-                // Add recent books first (priority)
+         
                 for (const book of recentBooks) {
                     if (recommendations.length < limit * 4) {
                         recommendations.push({ ...book, recommendationReason: reason });
@@ -196,7 +195,7 @@ export class RecommendationsService {
                     }
                 }
 
-                // Then add older books if needed
+            
                 for (const book of olderBooks) {
                     if (recommendations.length < limit * 4) {
                         recommendations.push({ ...book, recommendationReason: reason });
@@ -206,13 +205,13 @@ export class RecommendationsService {
             }
         };
 
-        // Special function for author books with more lenient filter
+     
         const addAuthorBooks = (books: any[], reason: string) => {
             if (books && books.length > 0) {
                 console.log(`Processing ${books.length} books from favorite author...`);
                 let added = 0;
 
-                // Separate recent and older books
+             
                 const recentBooks: any[] = [];
                 const olderBooks: any[] = [];
 
@@ -226,7 +225,7 @@ export class RecommendationsService {
                     }
                 }
 
-                // Add recent books first (priority)
+           
                 for (const book of recentBooks) {
                     if (recommendations.length < limit * 4) {
                         recommendations.push({ ...book, recommendationReason: reason });
@@ -236,7 +235,7 @@ export class RecommendationsService {
                     }
                 }
 
-                // Then add older books if needed
+        
                 for (const book of olderBooks) {
                     if (recommendations.length < limit * 4) {
                         recommendations.push({ ...book, recommendationReason: reason });
@@ -250,7 +249,7 @@ export class RecommendationsService {
             }
         };
 
-        // 1. PRIORITY: Search by favorite authors FIRST (most important)
+      
         if (user.preferences?.favorite_authors && user.preferences.favorite_authors.length > 0) {
             for (const author of user.preferences.favorite_authors) {
                 try {
@@ -275,13 +274,12 @@ export class RecommendationsService {
             }
         }
 
-        // 2. Search by favorite books
         if (user.preferences?.favorite_books && user.preferences.favorite_books.length > 0) {
             for (const bookTitle of user.preferences.favorite_books) {
                 try {
                     const offset = Math.floor(Math.random() * 8);
 
-                    // Search in both languages
+                  
                     const queries = [
                         `intitle:${bookTitle}`,
                         `intitle:${bookTitle} language:es`,
