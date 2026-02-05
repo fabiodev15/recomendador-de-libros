@@ -6,9 +6,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilitar CORS para todos los orígenes
+  // Habilitar CORS para frontend en Vercel y localhost
   app.enableCors({
-    origin: true,
+    origin: ['https://recomendador-de-libros-frontend.vercel.app', 'http://localhost:5173'],
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,
@@ -35,7 +35,7 @@ async function createNestServer() {
     const app = await NestFactory.create(AppModule);
 
     app.enableCors({
-      origin: true,
+      origin: ['https://recomendador-de-libros-frontend.vercel.app', 'http://localhost:5173'],
       methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
       credentials: true,
