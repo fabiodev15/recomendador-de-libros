@@ -8,8 +8,9 @@ async function bootstrap() {
 
   // Habilitar CORS para todos los orígenes
   app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,
   });
 
@@ -34,8 +35,9 @@ async function createNestServer() {
     const app = await NestFactory.create(AppModule);
 
     app.enableCors({
-      origin: '*',
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      origin: true,
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
       credentials: true,
     });
 
@@ -50,8 +52,20 @@ async function createNestServer() {
   return cachedApp;
 }
 
-// Handler para Vercel
+// Handler para Vercel con manejo explícito de preflight
 export default async (req: any, res: any) => {
+  // Configurar headers CORS manualmente para asegurar compatibilidad con Vercel
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+
+  // Manejar preflight request
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   const app = await createNestServer();
   return app.getHttpAdapter().getInstance()(req, res);
 };
